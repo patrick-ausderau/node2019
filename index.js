@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const connection = require('./model/db.js');
+const animal = require('./model/animal');
 
 const app = express();
 const bodyParser = require('body-parser');
@@ -10,11 +10,7 @@ app.use(express.static('public'));
 
 app.get('/animals', async (req, res) => {
   try {
-    const [results, fields] = await connection.query(
-      'SELECT * FROM animal');
-    console.log(results); // results contains rows r
-    console.log(fields); // fields contains extra m
-    res.json(results);
+    res.json(await animal.getAll());
   } catch (e) {
     console.log(e);
     res.send('db error :(');
@@ -24,23 +20,16 @@ app.get('/animals', async (req, res) => {
 app.get('/animal', async (req, res) => {
   console.log(req.query);
   try {
-    const [results] = await connection.query(
-      'SELECT * FROM animal WHERE name LIKE ?',
-      [req.query.name]);
-    res.json(results);
+    res.json(await animal.search(req.query.name));
   } catch(e) {
-    res.send(`db error ${e}`);
+    res.send(`db error`);
   }
 });
 
 app.post('/animal', bodyParser.urlencoded({extended: true}), async (req, res) => {
   console.log(req.body);
   try {
-    const [result] = await connection.query(
-      'INSERT INTO animal  (name) VALUES (?)',
-      [req.body.name]
-    );
-    res.json(result);
+    res.json(await animal.insert(req.body.name));
   } catch (e) {
     console.log(e);
     res.send('db error');
